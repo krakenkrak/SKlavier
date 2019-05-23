@@ -10,7 +10,7 @@ public:
     Application() {}
 
     const String getApplicationName() override       { return "SKlavier"; }
-    const String getApplicationVersion() override    { return "2.0.0"; }
+    const String getApplicationVersion() override    { return "1.0.0"; }
 
     void initialise (const String&) override         { mainWindow.reset (new MainWindow ("SKlavier", new MainContentComponent(), *this)); }
     void shutdown() override                         { mainWindow = nullptr; }
