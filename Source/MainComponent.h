@@ -5,7 +5,7 @@
  BEGIN_JUCE_PIP_METADATA
 
  name:             SKlavier
- version:          2.0.1
+ version:          2.1.1
  vendor:           JUCE
  website:          http://juce.com
  description:      Synthesiser with midi input.
@@ -93,9 +93,9 @@ struct SineWaveVoice : public SynthesiserVoice
 					currentAngle += angleDelta;
 					++startSample;
 
-					tailOff *= 0.99955; // damping
+					tailOff *= 0.99991; // damping
 
-					if (tailOff <= 0.00045)
+					if (tailOff <= 0.00009)
 					{
 						clearCurrentNote(); // erasing quiet notes
 
@@ -134,7 +134,7 @@ public:
 	SynthAudioSource(MidiKeyboardState& keyState)
 		: keyboardState(keyState)
 	{
-		for (auto i = 0; i < 4; ++i)
+		for (auto i = 0; i < 64; ++i) // kay state buffer limit
 			synth.addVoice(new SineWaveVoice());
 
 		synth.addSound(new SineWaveSound());
