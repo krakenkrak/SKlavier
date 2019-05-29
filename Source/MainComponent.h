@@ -5,7 +5,7 @@
  BEGIN_JUCE_PIP_METADATA
 
  name:             SKlavier
- version:          1.0.0
+ version:          2.0.0
  vendor:           JUCE
  website:          http://juce.com
  description:      Synthesiser with midi input.
@@ -48,16 +48,16 @@ struct SineWaveVoice : public SynthesiserVoice
 	}
 
 	void startNote(int midiNoteNumber, float velocity,
-		SynthesiserSound*, int /*currentPitchWheelPosition*/) override
+		SynthesiserSound*, int currentPitchWheelPosition) override
 	{
-		currentAngle = 0.0;
+		currentAngle = 0.0; //phase
 		level = velocity * 0.15;
 		tailOff = 0.0;
 
-		auto cyclesPerSecond = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
+		auto cyclesPerSecond = MidiMessage::getMidiNoteInHertz(midiNoteNumber)/*+(currentPitchWheelPosition/128)*/; //frequency
 		auto cyclesPerSample = cyclesPerSecond / getSampleRate();
 
-		angleDelta = cyclesPerSample * 2.0 * MathConstants<double>::pi;
+		angleDelta = cyclesPerSample * 2.0 * MathConstants<double>::pi; //increment
 	}
 
 	void stopNote(float /*velocity*/, bool allowTailOff) override
@@ -81,11 +81,11 @@ struct SineWaveVoice : public SynthesiserVoice
 	{
 		if (angleDelta != 0.0)
 		{
-			if (tailOff > 0.0) // [7]
+			if (tailOff > 0.0) // when note is depressed
 			{
 				while (--numSamples >= 0)
 				{
-					auto currentSample = (float)(std::sin(currentAngle) * level * tailOff);
+					auto currentSample = (float)((std::sin(currentAngle) * level * tailOff) + (std::sin(2 * currentAngle) * level * tailOff / 2) + (std::sin(3 * currentAngle) * level * tailOff / 5) + (std::sin(4 * currentAngle) * level * tailOff / 10) + (std::sin(5 * currentAngle) * level * tailOff / 50) + (std::sin(6 * currentAngle) * level * tailOff / 80) + (std::sin(7 * currentAngle) * level * tailOff / 100));
 
 					for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
 						outputBuffer.addSample(i, startSample, currentSample);
@@ -93,11 +93,11 @@ struct SineWaveVoice : public SynthesiserVoice
 					currentAngle += angleDelta;
 					++startSample;
 
-					tailOff *= 0.99; // [8]
+					tailOff *= 0.99955; // damping
 
-					if (tailOff <= 0.005)
+					if (tailOff <= 0.00045)
 					{
-						clearCurrentNote(); // [9]
+						clearCurrentNote(); // erasing quiet notes
 
 						angleDelta = 0.0;
 						break;
@@ -106,15 +106,18 @@ struct SineWaveVoice : public SynthesiserVoice
 			}
 			else
 			{
-				while (--numSamples >= 0) // [6]
+				while (--numSamples >= 0) // that is happening when note is pressed
 				{
-					auto currentSample = (float)(std::sin(currentAngle) * level);
+
+
+					auto currentSample = (float)((std::sin(currentAngle) * level)+(std::sin(2*currentAngle) * level/2)+(std::sin(3 * currentAngle) * level / 5) + (std::sin(4 * currentAngle) * level / 10) + (std::sin(5 * currentAngle) * level / 50) + (std::sin(6 * currentAngle) * level / 80) + (std::sin(7 * currentAngle) * level / 100));
 
 					for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
 						outputBuffer.addSample(i, startSample, currentSample);
 
 					currentAngle += angleDelta;
 					++startSample;
+				
 				}
 			}
 		}
