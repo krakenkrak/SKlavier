@@ -5,7 +5,7 @@
  BEGIN_JUCE_PIP_METADATA
 
  name:             SKlavier
- version:          2.0.0
+ version:          2.0.1
  vendor:           JUCE
  website:          http://juce.com
  description:      Synthesiser with midi input.
